@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart';
 import '../../../theme/theme.dart';
 import '../../../widgets/song/song_tile.dart';
@@ -20,17 +21,29 @@ class LibraryContent extends StatelessWidget {
           SizedBox(height: 16),
           Text("Library", style: AppTextStyles.heading),
           SizedBox(height: 50),
-      
+
           Expanded(
-            child: ListView.builder(
-              itemCount: mv.songs.length,
-              itemBuilder: (context, index) => SongTile(
-                song: mv.songs[index],
-                isPlaying: mv.isSongPlaying(mv.songs[index]) ,
-                onTap: () {
-                  mv.start(mv.songs[index]);
-                },
-              ),
+            child: Builder(
+              builder: (context) {
+                if (mv.songs.isLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (mv.songs.hasError) {
+                  return Center(child: Text("Error: ${mv.songs.error}"));
+                }
+
+                final songs = mv.songs.value ?? [];
+                return ListView.builder(
+                  itemCount: songs.length,
+                  itemBuilder: (context, index) => SongTile(
+                    song: songs[index],
+                    isPlaying: mv.isSongPlaying(songs[index]),
+                    onTap: () {
+                      mv.start(songs[index]);
+                    },
+                  ),
+                );
+              },
             ),
           ),
         ],
